@@ -1,0 +1,225 @@
+-- Branches table
+CREATE TABLE branches (
+    branch_id INT PRIMARY KEY,
+    branch_name VARCHAR(100)
+);
+
+-- Customers table
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    referred_by INT -- Optional for self join task
+);
+-- Orders table
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    branch_id INT,
+    order_date DATE,
+    total_amount DECIMAL(10, 2),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);
+-- Returns table
+CREATE TABLE returns (
+    return_id INT PRIMARY KEY,
+    order_id INT,
+    return_date DATE,
+    return_amount DECIMAL(10,2),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+);
+
+-- Branches
+INSERT INTO branches VALUES(1, 'Toshkent');
+INSERT INTO branches VALUES(2, 'Samarqand');
+
+-- Customers
+INSERT INTO customers VALUES (1, 'Ali', null);
+INSERT INTO customers VALUES(2, 'Vali', 1);
+INSERT INTO customers VALUES (3, 'Gulbahor', null);
+INSERT INTO customers VALUES (4, 'Sanjar', 2);
+INSERT INTO customers VALUES (5, 'Bahrom', 3);
+
+-- Orders 
+INSERT INTO orders VALUES (101, 1, 1, '2024-01-10', 200.00);
+INSERT INTO orders VALUES (102, 2, 2, '2024-02-15', 350.00);
+INSERT INTO orders VALUES (103, 4, 2, '2024-03-20', 180.00);
+INSERT INTO orders VALUES (104, 5, 1, '2024-01-16', 200.00);
+
+-- Returns 
+INSERT INTO returns VALUES(201, 101, '2024-01-15', 50.00);
+INSERT INTO returns VALUES(202, 102, '2024-02-17', 40.00);
+
+-- SELECT * FROM branches;
+-- SELECT * FROM customers;
+-- SELECT * FROM orders;
+-- SELECT * FROM returns;
+
+--  Tasklar 1-task
+-- SELECT customers.name, orders.order_date, orders.total_amount FROM customers JOIN orders ON customers.customer_id = orders.customer_id;
+
+--  Tasklar 2-task
+-- SELECT customers.customer_id, customers.name, orders.order_id, orders.order_date, orders.total_amount FROM customers LEFT JOIN orders ON customers.customer_id = orders.customer_id;
+
+--  Tasklar 3-task
+-- SELECT o.order_id, o.branch_id, o.total_amount, o.order_date, c.name FROM orders o LEFT JOIN customers c ON c.customer_id = o.customer_id;
+
+--  Tasklar 4-task
+SELECT 
+	o.order_id, 
+	c.name, 
+	b.branch_name, 
+    o.total_amount 
+FROM orders o 
+JOIN 
+	branches b ON b.branch_id = o.branch_id
+JOIN customers c ON c.customer_id = o.customer_id;
+
+-- 5 - task
+SELECT  c.name, 
+		r.name AS referred_by_name
+FROM 
+	customers c 
+LEFT JOIN   
+	customers r ON 	c.referred_by  = r.customer_id;
+
+-- 6 - task
+SELECT 
+	c.name AS customer_name, 
+    SUM(o.total_amount) AS total_orders 
+FROM 
+	customers c 
+JOIN 
+	orders o ON c.customer_id = o.customer_id  
+GROUP BY 
+	c.customer_id, c.name
+HAVING
+	SUM(o.total_amount) > 500;
+
+-- 7 - task
+    SELECT 
+	o.order_id, 
+    c.name,
+    b.branch_name,
+    o.total_amount
+FROM 
+	orders o
+JOIN 
+	customers c ON o.customer_id = c.customer_id
+JOIN 
+	branches b ON o.branch_id = b.branch_id
+
+-- 8 - task
+SELECT 
+	o.order_id,
+    b.branch_name,
+    o.total_amount
+FROM 
+	orders o 
+JOIN 
+	 branches b ON b.branch_id = o.branch_id
+WHERE
+	b.branch_name = 'Toshkent'
+ORDER BY  
+	o.total_amount DESC;
+
+-- 9 - task
+
+    SELECT 
+	o.order_id,
+    o.order_date,    
+    r.return_date,
+    o.total_amount,
+    r.return_amount
+FROM 
+	orders o  
+LEFT JOIN 
+	returns r ON o.order_id = r.order_id
+WHERE
+	MONTH(o.order_date) = 1 AND YEAR(o.order_date) = 2024;
+
+-- 10 - task
+SELECT
+	b.branch_name,
+    COUNT(o.order_id) AS total_orders
+FROM
+	branches b
+JOIN 
+	orders o ON b.branch_id = o.branch_id
+GROUP BY 
+	b.branch_name;
+
+
+
+-- 11 - task     1. Total number of orders per customer
+SELECT 
+	c.name,
+    COUNT(o.order_id) AS orders_count
+FROM 
+	customers c 
+LEFT JOIN 
+	orders o ON c.customer_id = o.customer_id
+GROUP BY
+	c.name
+
+-- 12 - task
+-- 2. Total sales per branch
+SELECT 
+	b.branch_name,
+    SUM(o.total_amount) AS total_sales 
+FROM
+	branches b
+JOIN 
+	orders o ON b.branch_id = o.branch_id
+GROUP BY 
+	b.branch_name
+
+-- 13 - task    3. Average order amount per customer
+SELECT 
+	c.name,
+    AVG(o.total_amount) AS avarage_spent 
+FROM
+	customers c
+LEFT JOIN 
+	orders o ON c.customer_id = o.customer_id
+GROUP BY 
+	c.name
+
+-- 14 - task
+SELECT 
+	b.branch_name,
+    COUNT(o.order_id) AS order_counts 
+FROM
+	branches b
+LEFT JOIN 
+	orders o ON b.branch_id = o.branch_id
+GROUP BY 
+	b.branch_name 
+HAVING
+	COUNT(o.order_id)> 5;
+
+-- 15 - task
+SELECT 
+    YEAR(order_date) AS order_year,
+    MONTH(order_date) AS order_month,
+    COUNT(order_id) AS order_count
+FROM 
+    orders
+GROUP BY 
+    YEAR(order_date), MONTH(order_date)
+ORDER BY 
+    order_year, order_month  ASC ; 
+
+
+-- 16 - task 6. Total sales per customer per branch
+SELECT 
+    c.name,
+    b.branch_name,
+    SUM(o.total_amount)
+FROM 
+	orders o
+JOIN
+	branches b ON b.branch_id = o.branch_id
+JOIN
+	customers c ON c.customer_id = o.customer_id
+GROUP BY 
+    c.name, b.branch_name
