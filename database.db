@@ -273,6 +273,9 @@ ORDER BY
     o.order_date, b.branch_name;
 
 -- 20 - task 10. Count high-value orders (> $1000) per branch using CASE
+-- Har bir filialda 1000$ dan katta buyurtmalar sonini sanang. CASE ishlatilishi kerak.
+
+
 SELECT 	
     b.branch_name,    
     COUNT(CASE 
@@ -285,8 +288,12 @@ JOIN
 GROUP BY 
     b.branch_name
 
+
 -- 🔀 UNION TASKS
 -- 21 - task  1. Combine customers who placed orders and who made returns
+-- Buyurtma bergan va tovarni qaytargan mijozlarni bitta ro‘yxatga birlashtiring.
+
+
 	-- Buyurtma bergan mijozlar
 SELECT 
     c.name AS customer_name
@@ -307,7 +314,10 @@ JOIN
 JOIN 
     returns r ON o.order_id = r.order_id;
 
+
 -- 22 - task  2. Same as above but include duplicates (UNION ALL)
+-- Oldingi topshiriqni yana bajaramiz, lekin bu safar takrorlangan mijozlar ham chiqsin.
+
 
 -- Buyurtma bergan mijozlar
 SELECT 
@@ -331,6 +341,9 @@ JOIN
 
 
 -- 23 - task 3. Customers who ordered in 2024 and returned in 2025
+-- 2024-yilda buyurtma bergan va 2025-yilda qaytarish qilgan mijozlarni toping.
+
+
 SELECT DISTINCT c.name
 FROM customers c
 JOIN orders o ON c.customer_id = o.customer_id
@@ -346,6 +359,9 @@ WHERE YEAR(o.order_date) = 2024
 
 -- 24 - task   4. Combine "Active" and "Inactive" customers with label
 -- Active customers (with orders)
+-- Buyurtma bergan ("Active") va buyurtma bermagan ("Inactive") mijozlarni bitta ro‘yxatga qo‘shing, va ularning holatini belgilang.
+
+
 SELECT 
     c.name AS customer_name,
     'Active' AS status
@@ -369,6 +385,10 @@ WHERE
 
 
 -- 25 - task 5. Combine and sort all transaction dates (orders + returns)
+-- Barcha buyurtma va qaytarish sanalarini bitta ro‘yxatga qo‘shing va sana bo‘yicha tartiblang.
+
+
+
 SELECT 
     order_date AS transaction_date
 FROM 
@@ -383,3 +403,114 @@ FROM
 
 ORDER BY 
     transaction_date;
+
+
+-- 26 - task 6. Combine branch IDs from orders and returns
+-- orders va returns jadvalidan kelgan branch_id larni birlashtiring.
+
+
+SELECT 
+    branch_id
+FROM 
+    orders
+
+UNION
+SELECT
+	o.branch_id
+FROM 
+	returns r
+JOIN 
+	orders o ON o.order_id = r.order_id
+
+
+-- 27 - task  7. Total order and refund amount with label column
+-- Buyurtma summasi va qaytarilgan summani alohida ko‘rsat, yoniga esa ‘Order’ yoki ‘Refund’ degan label ustunini qo‘sh.
+
+SELECT 
+    o.total_amount AS amount,
+    'Order' AS label
+FROM 
+    orders o
+
+UNION
+SELECT
+	r.return_amount AS amount,
+    'Return' AS label
+FROM 
+	returns r
+JOIN 
+	orders o ON o.order_id = r.order_id
+
+
+-- 28 - task      8. Total order and refund amount with label column
+--                 Mijozlarning buyurtma ma’lumotlari va qaytarish ma’lumotlarini bitta jadvalda birlashtir.
+-- Customer + Order ma’lumotlari
+SELECT 
+    c.name AS customer_name,
+    o.order_date AS transaction_date,
+    o.total_amount AS amount,
+    'Order' AS type
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+
+UNION
+
+-- Customer + Return ma’lumotlari
+SELECT 
+    c.name AS customer_name,
+    r.return_date AS transaction_date,
+    r.return_amount AS amount,
+    'Return' AS type
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+JOIN 
+    returns r ON o.order_id = r.order_id;
+
+
+
+-- 29 - task  9. Unified report of transactions with common column names
+-- Buyurtma (orders) va qaytarish (returns) ma’lumotlarini bitta formatda, bir xil ustun nomlari bilan birlashtir.
+SELECT 
+	o.order_id AS transaction_id,
+    o.order_date AS transaction_date,
+    o.total_amount AS amount,
+    'Order' AS type
+FROM 
+    orders o
+
+UNION
+SELECT
+	r.return_id AS transaction_id,
+    r.return_date AS transaction_date,
+	r.return_amount AS amount,
+    'Return' AS type
+FROM 
+	returns r
+
+
+-- 30 - task  10. 5 latest transactions (orders and returns) using UNION and LIMIT
+-- Buyurtmalar (orders) va qaytarishlar (returns) jadvalidan so‘nggi 5 ta tranzaksiyani chiqaring.
+
+SELECT 
+	o.order_id AS transaction_id,
+    o.order_date AS transaction_date,
+    o.total_amount AS amount,
+    'Order' AS type
+FROM 
+    orders o
+
+UNION
+SELECT
+	r.return_id AS transaction_id,
+    r.return_date AS transaction_date,
+	r.return_amount AS amount,
+    'Return' AS type
+FROM 
+	returns r
+ORDER BY
+	transaction_date DESC
+    LIMIT 5
