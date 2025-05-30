@@ -41,13 +41,20 @@ INSERT INTO customers VALUES (5, 'Bahrom', 3);
 
 -- Orders 
 INSERT INTO orders VALUES (101, 1, 1, '2024-01-10', 200.00);
-INSERT INTO orders VALUES (102, 2, 2, '2024-02-15', 350.00);
-INSERT INTO orders VALUES (103, 4, 2, '2024-03-20', 180.00);
+INSERT INTO orders VALUES (102, 2, 2, '2022-02-15', 1250.00);
+INSERT INTO orders VALUES (103, 4, 2, '2024-03-15', 180.00);
 INSERT INTO orders VALUES (104, 5, 1, '2024-01-16', 200.00);
+INSERT INTO orders VALUES (105, 3, 1, '2025-01-16', 1200.00);
+INSERT INTO orders VALUES (106, 4, 2, '2024-01-16', 200.00);
+INSERT INTO orders VALUES (107, 1, 1, '2023-01-16', 350.00);
+INSERT INTO orders VALUES (108, 5, 1, '2024-01-16', 450.00);
 
 -- Returns 
-INSERT INTO returns VALUES(201, 101, '2024-01-15', 50.00);
-INSERT INTO returns VALUES(202, 102, '2024-02-17', 40.00);
+INSERT INTO returns VALUES(201, 101, '2025-01-15', 50.00);
+INSERT INTO returns VALUES(202, 102, '2025-02-17', 40.00);
+INSERT INTO returns VALUES(203, 103, '2025-02-17', 40.00);
+INSERT INTO returns VALUES(204, 104, '2025-02-17', 40.00);
+INSERT INTO returns VALUES(205, 105, '2025-02-17', 40.00);
 
 -- SELECT * FROM branches;
 -- SELECT * FROM customers;
@@ -299,3 +306,80 @@ JOIN
     orders o ON c.customer_id = o.customer_id
 JOIN 
     returns r ON o.order_id = r.order_id;
+
+-- 22 - task  2. Same as above but include duplicates (UNION ALL)
+
+-- Buyurtma bergan mijozlar
+SELECT 
+    c.name AS customer_name
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+
+UNION ALL
+
+-- Tovar qaytargan mijozlar
+SELECT 
+    c.name AS customer_name
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+JOIN 
+    returns r ON o.order_id = r.order_id;
+
+
+-- 23 - task 3. Customers who ordered in 2024 and returned in 2025
+SELECT DISTINCT c.name
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+WHERE YEAR(o.order_date) = 2024
+  AND c.customer_id IN (
+    SELECT c2.customer_id
+    FROM customers c2
+    JOIN orders o2 ON c2.customer_id = o2.customer_id
+    JOIN returns r ON o2.order_id = r.order_id
+    WHERE YEAR(r.return_date) = 2025
+);
+
+
+-- 24 - task   4. Combine "Active" and "Inactive" customers with label
+-- Active customers (with orders)
+SELECT 
+    c.name AS customer_name,
+    'Active' AS status
+FROM 
+    customers c
+JOIN 
+    orders o ON c.customer_id = o.customer_id
+
+UNION
+
+-- Inactive customers (no orders)
+SELECT 
+    c.name AS customer_name,
+    'Inactive' AS status
+FROM 
+    customers c
+LEFT JOIN 
+    orders o ON c.customer_id = o.customer_id
+WHERE 
+    o.order_id IS NULL;
+
+
+-- 25 - task 5. Combine and sort all transaction dates (orders + returns)
+SELECT 
+    order_date AS transaction_date
+FROM 
+    orders
+
+UNION
+
+SELECT 
+    return_date AS transaction_date
+FROM 
+    returns
+
+ORDER BY 
+    transaction_date;
